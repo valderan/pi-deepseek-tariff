@@ -1,5 +1,9 @@
 # pi-deepseek-tariff
 
+[![npm](https://img.shields.io/npm/v/pi-deepseek-tariff?color=blue)](https://www.npmjs.com/package/pi-deepseek-tariff)
+[![license](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+[![pi-package](https://img.shields.io/badge/pi-package-8a2be2)](https://pi.dev/packages)
+
 A [pi](https://pi.dev) extension that shows the current **DeepSeek API tariff window** — peak or off-peak — with a countdown, and a panel with live prices parsed from the official DeepSeek pricing page.
 
 DeepSeek charges double during peak hours, so knowing the current window is worth real money.
@@ -28,16 +32,17 @@ Commands: /deepseek-peak on|off|refresh|en|ru
 
 ```bash
 # from git (tags are pinned)
-pi install git:github.com/<you>/deepseek-peak@v0.1.0
+pi install git:github.com/valderan/pi-deepseek-tariff@v0.1.0
 
 # from npm
 pi install npm:pi-deepseek-tariff
 
 # local checkout, for development
-pi install ./deepseek-peak
+git clone git@github.com:valderan/pi-deepseek-tariff.git
+pi install ./pi-deepseek-tariff
 
 # try it for one run without touching settings
-pi -e ./deepseek-peak
+pi -e ./pi-deepseek-tariff
 ```
 
 Then run `/deepseek-peak`. Afterwards `pi list`, `pi update --extensions`, `pi remove …` manage it like any other package.
@@ -90,7 +95,9 @@ Chinese holidays are announced yearly and are not computed, so keep the list cur
 ## Development
 
 ```bash
-npm test        # node:test, no dependencies required
+git clone git@github.com:valderan/pi-deepseek-tariff.git
+cd pi-deepseek-tariff
+npm test            # node:test, no dependencies required
 npm run typecheck   # needs `npm install` for the pi type packages
 ```
 
@@ -107,6 +114,15 @@ test/                         node:test suites + captured page fixture
 ```
 
 The rules and parsing modules are pure and take injectable inputs, so tests never touch the network or a TUI. `test/fixtures/pricing.html` is a captured copy of the pricing tables; refresh it when DeepSeek changes the page.
+
+## Release
+
+```bash
+git tag -a v0.1.0 -m "v0.1.0"
+git push origin main --tags
+```
+
+Tags are pinnable with `pi install git:…@v0.1.0`. Publishing to npm (`.github/workflows/ci.yml` runs it on a `v*` tag) puts the package into the [pi package gallery](https://pi.dev/packages).
 
 ## License
 

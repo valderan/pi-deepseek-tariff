@@ -12,6 +12,14 @@
   ],
   "license": "MIT",
   "author": "Valderan",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/valderan/pi-deepseek-tariff.git"
+  },
+  "homepage": "https://github.com/valderan/pi-deepseek-tariff#readme",
+  "bugs": {
+    "url": "https://github.com/valderan/pi-deepseek-tariff/issues"
+  },
   "type": "module",
   "files": [
     "extensions",
