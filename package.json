@@ -1,6 +1,6 @@
 {
   "name": "pi-deepseek-tariff",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "DeepSeek peak/off-peak tariff panel for pi: local clock, next window, live per-model prices and Search & Fetch rates",
   "keywords": [
     "pi-package",
@@ -30,7 +30,8 @@
   "pi": {
     "extensions": [
       "./extensions/deepseek-peak.ts"
-    ]
+    ],
+    "image": "https://raw.githubusercontent.com/valderan/pi-deepseek-tariff/main/assets/banner.png"
   },
   "peerDependencies": {
     "@earendil-works/pi-coding-agent": "*",

@@ -3,6 +3,7 @@
 [![npm](https://img.shields.io/npm/v/pi-deepseek-tariff?color=blue)](https://www.npmjs.com/package/pi-deepseek-tariff)
 [![license](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![pi-package](https://img.shields.io/badge/pi-package-8a2be2)](https://pi.dev/packages)
+[![changelog](https://img.shields.io/badge/changelog-Keep%20a%20Changelog-orange)](CHANGELOG.md)
 
 A [pi](https://pi.dev) extension that shows the current **DeepSeek API tariff window** — peak or off-peak — with a countdown, and a panel with live prices parsed from the official DeepSeek pricing page.
 
@@ -132,12 +133,12 @@ Git tags and npm versions are kept in lockstep: the tag `vX.Y.Z` always points a
 the commit whose `package.json` says `X.Y.Z`, and npm publishes that same version.
 
 ```bash
-# 1. bump package.json + README, commit
-npm version 0.3.1 --no-git-tag-version     # or edit by hand
-git commit -am "chore: release 0.3.1"
+# 1. bump package.json, add a CHANGELOG entry, commit
+npm version 0.3.2 --no-git-tag-version     # or edit by hand
+git commit -am "chore: release 0.3.2"
 
 # 2. tag the release commit and push
-git tag -a v0.3.1 -m v0.3.1
+git tag -a v0.3.2 -m v0.3.2
 git push origin main --tags
 
 # 3. publish the tag to npm (2FA prompt, or --otp=123456)
@@ -148,7 +149,7 @@ npm publish --access public
 Check the result:
 
 ```bash
-npm view pi-deepseek-tariff dist-tags    # { latest: '0.3.1' }
+npm view pi-deepseek-tariff dist-tags    # { latest: '0.3.2' }
 npm view pi-deepseek-tariff versions
 ```
 
@@ -156,8 +157,13 @@ npm view pi-deepseek-tariff versions
 `NPM_TOKEN` secret is configured; with trusted publishing enabled on npmjs.com the
 token is not needed at all and the build is signed with provenance.
 
-Tags are pinnable with `pi install git:…@v0.3.1`. Published versions show up in the
+Tags are pinnable with `pi install git:…@v0.3.2`. Published versions show up in the
 [pi package gallery](https://pi.dev/packages) through the `pi-package` keyword.
+
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md). Git tags and npm versions are kept in lockstep, so
+`vX.Y.Z` always matches the published `X.Y.Z`.
 
 ## License
 
