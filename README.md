@@ -33,11 +33,11 @@ Commands: /dsp on|off|refresh|en|ru · /dsp footer on|off
 ## Install
 
 ```bash
-# from git (tags are pinned)
-pi install git:github.com/valderan/pi-deepseek-tariff@v0.1.0
-
-# from npm
+# from npm (always the `latest` dist-tag)
 pi install npm:pi-deepseek-tariff
+
+# from git: tags mirror the npm versions, so pin whichever you want
+pi install git:github.com/valderan/pi-deepseek-tariff@v0.3.0
 
 # local checkout, for development
 git clone git@github.com:valderan/pi-deepseek-tariff.git
@@ -128,12 +128,36 @@ The rules and parsing modules are pure and take injectable inputs, so tests neve
 
 ## Release
 
+Git tags and npm versions are kept in lockstep: the tag `vX.Y.Z` always points at
+the commit whose `package.json` says `X.Y.Z`, and npm publishes that same version.
+
 ```bash
-git tag -a v0.1.0 -m "v0.1.0"
+# 1. bump package.json + README, commit
+npm version 0.3.1 --no-git-tag-version     # or edit by hand
+git commit -am "chore: release 0.3.1"
+
+# 2. tag the release commit and push
+git tag -a v0.3.1 -m v0.3.1
 git push origin main --tags
+
+# 3. publish the tag to npm (2FA prompt, or --otp=123456)
+npm publish --access public
 ```
 
-Tags are pinnable with `pi install git:…@v0.1.0`. Publishing to npm (`.github/workflows/ci.yml` runs it on a `v*` tag) puts the package into the [pi package gallery](https://pi.dev/packages).
+`npm publish` sets the `latest` dist-tag automatically for a plain semver version.
+Check the result:
+
+```bash
+npm view pi-deepseek-tariff dist-tags    # { latest: '0.3.1' }
+npm view pi-deepseek-tariff versions
+```
+
+`.github/workflows/ci.yml` can publish on a `v*` tag instead of step 3 when the
+`NPM_TOKEN` secret is configured; with trusted publishing enabled on npmjs.com the
+token is not needed at all and the build is signed with provenance.
+
+Tags are pinnable with `pi install git:…@v0.3.1`. Published versions show up in the
+[pi package gallery](https://pi.dev/packages) through the `pi-package` keyword.
 
 ## License
 
