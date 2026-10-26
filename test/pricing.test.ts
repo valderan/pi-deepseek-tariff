@@ -54,7 +54,7 @@ test("parseRequestPricing is empty without the table", () => {
 
 function makeStore(dir: string, options: { offline?: boolean; fetchImpl?: typeof fetch; ttlMs?: number } = {}) {
 	let calls = 0;
-	const fetchImpl = (async (input: RequestInfo | URL) => {
+	const fetchImpl = (async (input: Parameters<typeof fetch>[0]) => {
 		calls += 1;
 		if (options.fetchImpl) return options.fetchImpl(input);
 		return new Response(html, { status: 200 });

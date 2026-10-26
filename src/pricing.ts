@@ -102,11 +102,12 @@ export function parsePricing(html: string): Record<string, ModelPricing> | undef
 			const tariffIndex = cells.findIndex((cell) => /^(off[\s-]?peak|peak)$/i.test(cell));
 			if (!field || tariffIndex < 0) continue;
 
+			const currentField = field;
 			const tariff: keyof ModelPricing = /^off/i.test(cells[tariffIndex]) ? "offPeak" : "peak";
 			const values = cells.slice(tariffIndex + 1).map(money);
 			names.forEach((name, index) => {
 				const value = values[index];
-				if (value !== undefined) parsed[name][tariff][field] = value;
+				if (value !== undefined) parsed[name][tariff][currentField] = value;
 			});
 		}
 
