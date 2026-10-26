@@ -71,6 +71,7 @@ test("panel advertises the short /dsp command form", () => {
 			intervalMs: 30_000,
 			pricingTtlHours: 6,
 			alwaysShow: false,
+			footer: true,
 			models: ["deepseek"],
 			providerPrefix: "deepseek:",
 			holidays: new Set<string>(),
@@ -134,4 +135,34 @@ test("weekday labels shift with the zone", () => {
 	assert.deepEqual(runInZone("Europe/Moscow", "a: dayRangeLabel(localDayShift(date, 1), 'ru')"), {
 		a: "пн-пт",
 	});
+});
+
+test("footer status uses a coloured dot and always-yellow text", async () => {
+	const calls: Array<[string, string]> = [];
+	const theme = {
+		fg: (token: string, text: string) => {
+			calls.push([token, text]);
+			return `<${token}>${text}`;
+		},
+		bold: (text: string) => text,
+	} as never;
+	const { statusText } = await import("../src/view.ts");
+	const config = {
+		intervalMs: 30_000,
+		pricingTtlHours: 6,
+		alwaysShow: false,
+		footer: true,
+		models: ["deepseek"],
+		providerPrefix: "deepseek:",
+		holidays: new Set<string>(),
+	};
+	const line = statusText(theme, config, "ru", { models: {}, requests: [], fetchedAt: 0, source: "builtin" });
+
+	// Only the dot is coloured by state; the text always uses the warning token.
+	const dot = calls.find(([, text]) => text === "●");
+	assert.ok(dot, "the dot must be rendered");
+	assert.ok(dot[0] === "success" || dot[0] === "error", `unexpected dot token ${dot[0]}`);
+	const body = calls.find(([token]) => token === "warning");
+	assert.ok(body, "the text must use the warning token");
+	assert.match(body[1], /^DeepSeek (Обычный|Пиковый) ещё \d/);
 });

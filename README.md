@@ -9,6 +9,8 @@ A [pi](https://pi.dev) extension that shows the current **DeepSeek API tariff wi
 DeepSeek charges double during peak hours, so knowing the current window is worth real money.
 
 ```
+● DeepSeek Off-peak for 11h 59m          ← footer line, always visible
+
 Now OFF-PEAK
 Computer: 14:43:52 26-10-2026(MSK) | UTC: 2026-10-26 11:43
 Next window: 04:00 - 07:00 27-10-2026(MSK) in 13h 16m
@@ -25,7 +27,7 @@ Peak windows (MSK): 04:00-07:00 and 09:00-13:00, Mon-Fri
 Off-peak = night, weekends and Chinese holidays
 Price source: api-docs.deepseek.com, updated 11:20 26-10 (next in 5h 59m)
 ────────────────────────────────────────────────────────────
-Commands: /dsp on|off|refresh|en|ru
+Commands: /dsp on|off|refresh|en|ru · /dsp footer on|off
 ```
 
 ## Install
@@ -57,10 +59,15 @@ Then run `/dsp`. Afterwards `pi list`, `pi update --extensions`, `pi remove …`
 | `/dsp on` / `off` | show or hide the panel (the footer line stays while a DeepSeek model is active) |
 | `/dsp refresh` | re-parse prices from the docs page now |
 | `/dsp en` / `ru` | switch the panel language (persisted) |
+| `/dsp footer on` / `off` (or `/dsp footeron` / `footeroff`) | show or hide the footer line (persisted) |
 
 ## What it does
 
-- **Footer line** — `deepseek: PEAK → off-peak 13:00 (1h 40m)`. Shown only while a DeepSeek model is active; red for peak, green for off-peak.
+- **Footer line** — one compact status line: `● DeepSeek Off-peak for 11h 59m`, or `● DeepSeek Peak for 1h 40m` during peak. The text is always yellow and only the dot changes colour — green for off-peak, red for peak. Shown only while a DeepSeek model is active; `/dsp footer off` hides it for good.
+
+  Russian looks like `● DeepSeek Обычный ещё 11ч 59м` / `● DeepSeek Пиковый ещё 1ч 40м`.
+
+  Pi renders every extension status on a single footer line, joined alphabetically, so the segment is kept short.
 - **Peak rules** — DeepSeek defines peak as `01:00-04:00` and `06:00-10:00` **UTC, Monday to Friday**; weekends and Chinese public holidays are off-peak all day.
 - **Local time everywhere** — the UTC clock comes from the machine clock, so peak windows, weekday labels and countdowns are rendered in *your* zone (`(MSK)`, `(UTC-04:00)`, …). Weekday labels shift with the zone: at UTC−4 the windows land on Sun–Thu.
 - **Prices** — parsed from `api-docs.deepseek.com/quick_start/pricing/`: cache hit, cache miss and output per model, plus the Search & Fetch request rates. The tariff in effect is highlighted.
@@ -76,6 +83,7 @@ Then run `/dsp`. Afterwards `pi list`, `pi update --extensions`, `pi remove …`
   "intervalMs": 30000,
   "pricingTtlHours": 6,
   "alwaysShow": false,
+  "footer": true,
   "models": ["deepseek"],
   "providerPrefix": "deepseek:",
   "holidays": ["2026-10-01", "2026-10-02"]
@@ -88,6 +96,7 @@ Then run `/dsp`. Afterwards `pi list`, `pi update --extensions`, `pi remove …`
 | `intervalMs` | `30000` | minimum refresh cadence (clamped to ≥ 5000) |
 | `pricingTtlHours` | `6` | how long parsed prices stay valid |
 | `alwaysShow` | `false` | show the footer line for non-DeepSeek models too |
+| `footer` | `true` | show the footer status line at all; `/dsp footer off` writes this |
 | `models` | `["deepseek"]` | id substrings that count as DeepSeek |
 | `providerPrefix` | `"deepseek:"` | prefix used when printing model ids |
 | `holidays` | `[]` | Chinese public holidays as Beijing dates (`YYYY-MM-DD`), off-peak all day |

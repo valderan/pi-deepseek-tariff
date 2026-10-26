@@ -40,7 +40,7 @@ export default function deepseekPeak(pi: ExtensionAPI) {
 	};
 
 	const renderFooter = (ctx: ExtensionContext | ExtensionCommandContext, current: Pricing = pricing.get()) => {
-		if (!config.alwaysShow && !isDeepSeekModel(ctx)) {
+		if (!config.footer || (!config.alwaysShow && !isDeepSeekModel(ctx))) {
 			ctx.ui.setStatus(STATUS_KEY, undefined);
 			return;
 		}
@@ -121,7 +121,23 @@ export default function deepseekPeak(pi: ExtensionAPI) {
 		config = loadConfig();
 		lang = config.language ?? "en";
 		pricing.setTtl(ttlMs());
-		const arg = args.trim().toLowerCase();
+		const parts = args.trim().toLowerCase().split(/\s+/).filter(Boolean);
+		const arg = parts[0] ?? "";
+		const option = parts[1] ?? "";
+
+		// Footer line: /dsp footer on|off, or the one-word /dsp footeron|footeroff.
+		if (arg === "footer" || arg === "footeron" || arg === "footeroff") {
+			const next =
+				arg === "footeron" ? true : arg === "footeroff" ? false : option === "on" ? true : option === "off" ? false : !config.footer;
+			config.footer = next;
+			saveConfig({ footer: next });
+			render(ctx);
+			ctx.ui.notify(
+				next ? "DeepSeek footer line: on · Строка футера: вкл" : "DeepSeek footer line: off · Строка футера: выкл",
+				"info",
+			);
+			return;
+		}
 
 		if (arg === "ru" || arg === "en") {
 			lang = arg;

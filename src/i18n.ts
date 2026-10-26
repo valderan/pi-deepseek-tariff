@@ -34,6 +34,10 @@ type Strings = {
 	sourceBuiltin: string;
 	requestPricing: string;
 	commands: string;
+	statusBrand: string;
+	statusPeak: string;
+	statusOffPeak: string;
+	statusFor: (duration: string) => string;
 	locale: string;
 	hourUnit: string;
 	minuteUnit: string;
@@ -60,6 +64,10 @@ export const STRINGS: Record<Lang, Strings> = {
 		sourceBuiltin: "built-in values (page unavailable)",
 		requestPricing: "Search & Fetch:",
 		commands: "Commands:",
+		statusBrand: "DeepSeek",
+		statusPeak: "Peak",
+		statusOffPeak: "Off-peak",
+		statusFor: (duration) => `for ${duration}`,
 		locale: "en-GB",
 		hourUnit: "h",
 		minuteUnit: "m",
@@ -84,6 +92,10 @@ export const STRINGS: Record<Lang, Strings> = {
 		sourceBuiltin: "встроенные значения (страница недоступна)",
 		requestPricing: "Search & Fetch:",
 		commands: "Команды:",
+		statusBrand: "DeepSeek",
+		statusPeak: "Пиковый",
+		statusOffPeak: "Обычный",
+		statusFor: (duration) => `ещё ${duration}`,
 		locale: "ru-RU",
 		hourUnit: "ч",
 		minuteUnit: "м",

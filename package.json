@@ -1,6 +1,6 @@
 {
   "name": "pi-deepseek-tariff",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "DeepSeek peak/off-peak tariff panel for pi: local clock, next window, live per-model prices and Search & Fetch rates",
   "keywords": [
     "pi-package",

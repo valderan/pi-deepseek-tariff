@@ -21,6 +21,7 @@ export type Config = {
 	intervalMs: number;
 	pricingTtlHours: number;
 	alwaysShow: boolean;
+	footer: boolean;
 	models: string[];
 	providerPrefix: string;
 	holidays: Set<string>;
@@ -41,6 +42,7 @@ export function loadConfig(): Config {
 		intervalMs: 30_000,
 		pricingTtlHours: DEFAULT_TTL_HOURS,
 		alwaysShow: false,
+		footer: true,
 		models: ["deepseek"],
 		providerPrefix: "deepseek:",
 		holidays: new Set<string>(),
@@ -54,6 +56,7 @@ export function loadConfig(): Config {
 			config.pricingTtlHours = raw.pricingTtlHours;
 		}
 		if (typeof raw.alwaysShow === "boolean") config.alwaysShow = raw.alwaysShow;
+		if (typeof raw.footer === "boolean") config.footer = raw.footer;
 		if (typeof raw.providerPrefix === "string" && raw.providerPrefix.length > 0) {
 			config.providerPrefix = raw.providerPrefix;
 		}

@@ -10,7 +10,6 @@ import type { Config } from "./config.ts";
 import { localizeUnit, STRINGS, type Lang } from "./i18n.ts";
 import type { Pricing, RequestPricing } from "./pricing.ts";
 import {
-	clockTime,
 	dayRangeLabel,
 	humanize,
 	isHoliday,
@@ -54,16 +53,21 @@ export function requestPricingText(entries: RequestPricing[], lang: Lang): strin
 	return `${parts.join(" · ")}${sharedUnit ? ` ${localized(sharedUnit)}` : ""}`.trim();
 }
 
+/**
+ * Compact footer line: a coloured dot plus always-yellow text, for example
+ * "● DeepSeek Off-peak for 11h 59m" or "● DeepSeek Peak for 1h 40m".
+ * Only the dot changes colour, so the line reads calmly in both states.
+ */
 export function statusText(theme: Theme, config: Config, lang: Lang, pricing: Pricing): string {
 	void pricing;
+	const text = STRINGS[lang];
 	const now = new Date();
 	const peak = isPeak(now, config.holidays);
 	const next = nextTransition(now, config.holidays);
-	const label = peak ? "PEAK" : "off-peak";
-	const color = theme.fg(peak ? "error" : "success", label);
-	const hint = peak ? "→ off-peak" : "→ peak";
-	const when = `${clockTime(next, lang)} (${humanize(next.getTime() - now.getTime(), lang)})`;
-	return `${theme.fg("dim", "deepseek:")} ${color} ${theme.fg("dim", `${hint} ${when}`)}`;
+	const dot = theme.fg(peak ? "error" : "success", "●");
+	const label = peak ? text.statusPeak : text.statusOffPeak;
+	const duration = humanize(next.getTime() - now.getTime(), lang);
+	return `${dot} ${theme.fg("warning", `${text.statusBrand} ${label} ${text.statusFor(duration)}`)}`;
 }
 
 export function panelLines(
@@ -153,7 +157,7 @@ export function panelLines(
 	lines.push(SEPARATOR);
 
 	// 8. Command hints.
-	lines.push(`${theme.fg("dim", text.commands)} ${white("/dsp on|off|refresh|en|ru")}`);
+	lines.push(`${theme.fg("dim", text.commands)} ${white("/dsp on|off|refresh|en|ru · /dsp footer on|off")}`);
 
 	return lines;
 }
