@@ -117,41 +117,45 @@ export default function deepseekPeak(pi: ExtensionAPI) {
 	pi.on("agent_start", async (_event, ctx) => render(ctx));
 	pi.on("turn_start", async (_event, ctx) => render(ctx));
 
-	pi.registerCommand("deepseek-peak", {
-		description: "DeepSeek peak/off-peak panel · Панель DeepSeek peak/off-peak",
-		handler: async (args, ctx) => {
-			config = loadConfig();
-			lang = config.language ?? "en";
-			pricing.setTtl(ttlMs());
-			const arg = args.trim().toLowerCase();
+	const commandHandler = async (args: string, ctx: ExtensionCommandContext) => {
+		config = loadConfig();
+		lang = config.language ?? "en";
+		pricing.setTtl(ttlMs());
+		const arg = args.trim().toLowerCase();
 
-			if (arg === "ru" || arg === "en") {
-				lang = arg;
-				config.language = arg;
-				saveConfig({ language: arg });
-				panelVisible = true;
-				render(ctx);
-				return;
-			}
-
-			if (arg === "off" || (arg === "" && panelVisible)) {
-				panelVisible = false;
-				ctx.ui.setWidget(WIDGET_KEY, undefined);
-				renderFooter(ctx);
-				return;
-			}
-
-			if (arg === "refresh") {
-				const value = await pricing.refresh(true);
-				panelVisible = true;
-				render(ctx, value);
-				return;
-			}
-
+		if (arg === "ru" || arg === "en") {
+			lang = arg;
+			config.language = arg;
+			saveConfig({ language: arg });
 			panelVisible = true;
 			render(ctx);
-		},
-	});
+			return;
+		}
+
+		if (arg === "off" || (arg === "" && panelVisible)) {
+			panelVisible = false;
+			ctx.ui.setWidget(WIDGET_KEY, undefined);
+			renderFooter(ctx);
+			return;
+		}
+
+		if (arg === "refresh") {
+			const value = await pricing.refresh(true);
+			panelVisible = true;
+			render(ctx, value);
+			return;
+		}
+
+		panelVisible = true;
+		render(ctx);
+	};
+
+	const description = "DeepSeek peak/off-peak panel · Панель DeepSeek peak/off-peak";
+	// `/dsp` is the short form; `deepseek-peek` accepts the spelling people reach
+	// for when they type "peak" wrong, so the command still resolves.
+	for (const name of ["deepseek-peak", "dsp", "deepseek-peek"]) {
+		pi.registerCommand(name, { description, handler: commandHandler });
+	}
 }
 
 export { STRINGS };

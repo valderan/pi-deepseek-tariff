@@ -25,7 +25,7 @@ Peak windows (MSK): 04:00-07:00 and 09:00-13:00, Mon-Fri
 Off-peak = night, weekends and Chinese holidays
 Price source: api-docs.deepseek.com, updated 11:20 26-10 (next in 5h 59m)
 ────────────────────────────────────────────────────────────
-Commands: /deepseek-peak on|off|refresh|en|ru
+Commands: /dsp on|off|refresh|en|ru
 ```
 
 ## Install
@@ -45,16 +45,18 @@ pi install ./pi-deepseek-tariff
 pi -e ./pi-deepseek-tariff
 ```
 
-Then run `/deepseek-peak`. Afterwards `pi list`, `pi update --extensions`, `pi remove …` manage it like any other package.
+Then run `/dsp`. Afterwards `pi list`, `pi update --extensions`, `pi remove …` manage it like any other package.
 
 ## Commands
 
+`/dsp` is the short form of the command. The full name `/deepseek-peak` works too, and `/deepseek-peek` is accepted for muscle memory.
+
 | Command | Effect |
 |---|---|
-| `/deepseek-peak` | toggle the panel |
-| `/deepseek-peak on` / `off` | show or hide it |
-| `/deepseek-peak refresh` | re-parse prices from the docs page now |
-| `/deepseek-peak en` / `ru` | switch the panel language (persisted) |
+| `/dsp` | toggle the panel |
+| `/dsp on` / `off` | show or hide the panel (the footer line stays while a DeepSeek model is active) |
+| `/dsp refresh` | re-parse prices from the docs page now |
+| `/dsp en` / `ru` | switch the panel language (persisted) |
 
 ## What it does
 

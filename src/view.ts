@@ -153,7 +153,7 @@ export function panelLines(
 	lines.push(SEPARATOR);
 
 	// 8. Command hints.
-	lines.push(`${theme.fg("dim", text.commands)} ${white("/deepseek-peak on|off|refresh|en|ru")}`);
+	lines.push(`${theme.fg("dim", text.commands)} ${white("/dsp on|off|refresh|en|ru")}`);
 
 	return lines;
 }
