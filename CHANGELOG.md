@@ -7,6 +7,8 @@ always point at the commit whose `package.json` declares the same version.
 
 ## [Unreleased]
 
+## [0.3.2] - 2026-10-30
+
 ### Added
 
 - Tab completion for the `/dsp` arguments (`on`, `off`, `refresh`, `en`, `ru`, `footer`
