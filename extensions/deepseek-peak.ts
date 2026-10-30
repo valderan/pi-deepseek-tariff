@@ -166,11 +166,37 @@ export default function deepseekPeak(pi: ExtensionAPI) {
 		render(ctx);
 	};
 
+	// Tab completion for the documented arguments, so `/dsp <TAB>` lists what the
+	// handler actually accepts instead of leaving them buried in the README.
+	const ARGUMENTS = [
+		{ value: "on", label: "on", description: "Show the panel · Показать панель" },
+		{ value: "off", label: "off", description: "Hide the panel · Скрыть панель" },
+		{ value: "refresh", label: "refresh", description: "Re-parse prices now · Обновить цены сейчас" },
+		{ value: "en", label: "en", description: "Panel language: English · Язык панели: английский" },
+		{ value: "ru", label: "ru", description: "Panel language: Russian · Язык панели: русский" },
+		{ value: "footer", label: "footer", description: "Footer line: on|off · Строка футера: on|off" },
+	];
+	const FOOTER_ARGUMENTS = ARGUMENTS.filter((item) => item.value === "on" || item.value === "off");
+
+	const getArgumentCompletions = (prefix: string) => {
+		const words = prefix.trimStart().split(/\s+/);
+		if (words.length > 2) return null;
+		const [head, tail] = words;
+		if (head === undefined || head === "") return ARGUMENTS;
+		if (tail === undefined) {
+			const matches = ARGUMENTS.filter((item) => item.value.startsWith(head.toLowerCase()));
+			return matches.length > 0 ? matches : null;
+		}
+		if (head.toLowerCase() !== "footer") return null;
+		const matches = FOOTER_ARGUMENTS.filter((item) => item.value.startsWith(tail.toLowerCase()));
+		return matches.length > 0 ? matches : null;
+	};
+
 	const description = "DeepSeek peak/off-peak panel · Панель DeepSeek peak/off-peak";
 	// `/dsp` is the short form; `deepseek-peek` accepts the spelling people reach
 	// for when they type "peak" wrong, so the command still resolves.
 	for (const name of ["deepseek-peak", "dsp", "deepseek-peek"]) {
-		pi.registerCommand(name, { description, handler: commandHandler });
+		pi.registerCommand(name, { description, handler: commandHandler, getArgumentCompletions });
 	}
 }
 

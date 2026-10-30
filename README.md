@@ -62,6 +62,8 @@ Then run `/dsp`. Afterwards `pi list`, `pi update --extensions`, `pi remove …`
 | `/dsp en` / `ru` | switch the panel language (persisted) |
 | `/dsp footer on` / `off` (or `/dsp footeron` / `footeroff`) | show or hide the footer line (persisted) |
 
+Type `/dsp ` and press Tab: the arguments above are offered as completions, with a short description each (`/dsp footer <Tab>` completes `on` and `off`).
+
 ## What it does
 
 - **Footer line** — one compact status line: `● DeepSeek Off-peak for 11h 59m`, or `● DeepSeek Peak for 1h 40m` during peak. The text is always yellow and only the dot changes colour — green for off-peak, red for peak. Shown only while a DeepSeek model is active; `/dsp footer off` hides it for good.

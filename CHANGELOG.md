@@ -7,6 +7,11 @@ always point at the commit whose `package.json` declares the same version.
 
 ## [Unreleased]
 
+### Added
+
+- Tab completion for the `/dsp` arguments (`on`, `off`, `refresh`, `en`, `ru`, `footer`
+  plus `footer on|off`), so the documented subcommands are discoverable from the editor.
+
 ## [0.3.1] - 2026-10-26
 
 ### Added
