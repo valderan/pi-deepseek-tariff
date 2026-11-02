@@ -80,6 +80,8 @@ Type `/dsp ` and press Tab: the arguments above are offered as completions, with
 
   So the word is eaten from the end, one letter per minute of the visible countdown: `OFF-PEA` + `K`, then `OFF-PE` + `AK`, … up to `OFF-` + `PEAK` in the final seconds. The tail is **red** when PEAK is about to start and **green** when off-peak is about to start, and the tick drops to 1 s during the last five minutes so each step lands on the minute.
 
+  ![Countdown states: every step of the footer for both switches, in English and Russian](https://raw.githubusercontent.com/valderan/pi-deepseek-tariff/main/assets/footer-states.png)
+
   Pi renders every extension status on a single footer line, joined alphabetically, so the segment is kept short.
 - **Peak rules** — DeepSeek defines peak as `01:00-04:00` and `06:00-10:00` **UTC, Monday to Friday**; weekends and Chinese public holidays are off-peak all day.
 - **Local time everywhere** — the UTC clock comes from the machine clock, so peak windows, weekday labels and countdowns are rendered in *your* zone (`(MSK)`, `(UTC-04:00)`, …). Weekday labels shift with the zone: at UTC−4 the windows land on Sun–Thu.
