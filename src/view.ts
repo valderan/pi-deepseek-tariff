@@ -13,6 +13,7 @@ import type { Config } from "./config.ts";
 import { localizeUnit, STRINGS, type Lang } from "./i18n.ts";
 import type { Pricing, RequestPricing } from "./pricing.ts";
 import {
+	countdownPhase,
 	dayRangeLabel,
 	humanize,
 	isHoliday,
@@ -24,6 +25,7 @@ import {
 	PEAK_WINDOWS_UTC,
 	tzLabel,
 	utcStamp,
+	type CountdownPhase,
 } from "./rules.ts";
 
 /** Placeholder for a full-width rule; the renderer expands it to the panel width. */
@@ -63,12 +65,31 @@ export function requestPricingText(entries: RequestPricing[], lang: Lang): strin
 }
 
 /**
- * Compact footer line: a state-coloured clock, the brand name in DeepSeek blue,
- * the tariff in English and the countdown in the theme accent — for example
- * "◷ deepseek OFF-PEAK → 11h 59m" or "◷ deepseek PEAK → 1h 40m".
+ * The tariff word with its tail painted as the switch approaches: the letters the
+ * feed already consumed go dim and the last up to four take the colour of the tariff
+ * that is about to start (red towards PEAK, green towards OFF-PEAK).
+ */
+function tariffWord(
+	theme: Theme,
+	word: string,
+	current: "success" | "error",
+	incoming: "success" | "error",
+	phase: CountdownPhase,
+): string {
+	if (phase.swallowed <= 0) return theme.fg(current, word);
+	const cut = Math.max(0, word.length - phase.swallowed);
+	const head = cut > 0 ? theme.fg("dim", word.slice(0, cut)) : "";
+	return `${head}${theme.fg(incoming, word.slice(cut))}`;
+}
+
+/**
+ * Compact footer line: a clock, the brand in DeepSeek blue, the tariff word and
+ * the countdown — for example "◷ deepseek OFF-PEAK → 11h 59m".
  *
- * The clock carries the state colour, so the line stays legible without a
- * separate status dot; the duration keeps the panel language units.
+ * The clock carries the state colour (green off-peak, red peak). Below 15 minutes
+ * to the next switch both the clock and the countdown turn yellow, and in the last
+ * four minutes the tariff word is eaten from the end, one letter per minute shown
+ * by the counter. The duration keeps the panel language units.
  */
 export function statusText(theme: Theme, config: Config, lang: Lang, pricing: Pricing): string {
 	void pricing;
@@ -76,12 +97,16 @@ export function statusText(theme: Theme, config: Config, lang: Lang, pricing: Pr
 	const now = new Date();
 	const peak = isPeak(now, config.holidays);
 	const next = nextTransition(now, config.holidays);
+	const msLeft = next.getTime() - now.getTime();
+	const phase = countdownPhase(msLeft);
 	const state = peak ? "error" : "success";
-	const duration = humanize(next.getTime() - now.getTime(), lang);
-	const clock = theme.fg(state, CLOCK);
+	const incoming = peak ? "success" : "error";
+	const clock = theme.fg(phase.urgent ? "warning" : state, CLOCK);
 	const brand = theme.style(text.statusBrand, { fg: BRAND_BLUE });
-	const label = theme.fg(state, peak ? text.statusPeak : text.statusOffPeak);
-	return `${clock} ${brand} ${label} ${theme.fg("accent", text.statusFor(duration))}`;
+	const word = peak ? text.statusPeak : text.statusOffPeak;
+	const label = tariffWord(theme, word, state, incoming, phase);
+	const countdown = theme.fg(phase.urgent ? "warning" : "accent", text.statusFor(humanize(msLeft, lang)));
+	return `${clock} ${brand} ${label} ${countdown}`;
 }
 
 /**

@@ -212,3 +212,134 @@ test("footer status leads with a state-coloured clock and the lowercase brand", 
 	assert.doesNotMatch(line, /ещё|for /);
 	assert.doesNotMatch(line, /warning/);
 });
+
+/** Runs `fn` with `new Date()`/`Date.now()` frozen at `iso`, so the countdown is deterministic. */
+function withFrozenClock<T>(iso: string, fn: () => T): T {
+	const RealDate = Date;
+	const fixed = RealDate.parse(iso);
+	class FrozenDate extends RealDate {
+		constructor(value?: number | string | Date) {
+			super(value === undefined ? fixed : value);
+		}
+		static now() {
+			return fixed;
+		}
+	}
+	globalThis.Date = FrozenDate as unknown as DateConstructor;
+	try {
+		return fn();
+	} finally {
+		globalThis.Date = RealDate;
+	}
+}
+
+/** Captures what statusText asks the theme to paint. */
+function captureTheme() {
+	const calls: Array<[string, string]> = [];
+	return {
+		calls,
+		theme: {
+			fg: (token: string, text: string) => {
+				calls.push([token, text]);
+				return text;
+			},
+			style: (text: string) => text,
+			bold: (text: string) => text,
+		} as never,
+	};
+}
+
+const FOOTER_CONFIG = {
+	intervalMs: 30_000,
+	pricingTtlHours: 6,
+	alwaysShow: false,
+	footer: true,
+	models: ["deepseek"],
+	providerPrefix: "deepseek:",
+	holidays: new Set<string>(),
+};
+const FOOTER_PRICING = { models: {}, requests: [], fetchedAt: 0, source: "builtin" as const };
+
+/** Peak starts at 01:00 UTC on Monday 2026-11-02. */
+const LEAVING_OFF_PEAK: Array<[string, number, string, string]> = [
+	// remaining, swallowed letters, dim head, red tail
+	["2026-11-02T00:45:01Z", 0, "", "OFF-PEAK"],
+	["2026-11-02T00:50:00Z", 0, "", "OFF-PEAK"],
+	["2026-11-02T00:56:00Z", 1, "OFF-PEA", "K"],
+	["2026-11-02T00:57:00Z", 2, "OFF-PE", "AK"],
+	["2026-11-02T00:58:00Z", 3, "OFF-P", "EAK"],
+];
+
+for (const [iso, swallowed, head, tail] of LEAVING_OFF_PEAK) {
+	test(`footer before PEAK at ${iso} swallows ${swallowed} letters`, async () => {
+		const { calls, theme } = captureTheme();
+		const { statusText } = await import("../src/view.ts");
+		withFrozenClock(iso, () => statusText(theme, FOOTER_CONFIG, "en", FOOTER_PRICING));
+
+		if (swallowed === 0) {
+			assert.deepEqual(calls.find(([, text]) => text === "OFF-PEAK"), ["success", "OFF-PEAK"]);
+		} else {
+			assert.deepEqual(calls.find(([, text]) => text === head), ["dim", head]);
+			assert.deepEqual(calls.find(([, text]) => text === tail), ["error", tail]);
+		}
+		// The clock turns yellow below 15 minutes, and so does the countdown.
+		assert.equal(calls.find(([, text]) => text === "\u25F7")?.[0], "warning");
+		const countdown = calls.find(([, text]) => text.startsWith("\u2192 "));
+		assert.equal(countdown?.[0], "warning");
+	});
+}
+
+test("footer turns yellow only below 15 minutes", async () => {
+	const { statusText } = await import("../src/view.ts");
+
+	// 15m01s left: still calm, the clock keeps the state colour and the countdown the accent.
+	const calm = captureTheme();
+	withFrozenClock("2026-11-02T00:44:59Z", () => statusText(calm.theme, FOOTER_CONFIG, "en", FOOTER_PRICING));
+	assert.equal(calm.calls.find(([, text]) => text === "\u25F7")?.[0], "success");
+	assert.equal(calm.calls.find(([token]) => token === "accent")?.[0], "accent");
+	assert.equal(calm.calls.find(([token]) => token === "warning"), undefined);
+
+	// 14m59s left: the clock and the countdown turn yellow, even while the counter still says 15m.
+	const urgent = captureTheme();
+	withFrozenClock("2026-11-02T00:45:01Z", () => statusText(urgent.theme, FOOTER_CONFIG, "en", FOOTER_PRICING));
+	assert.equal(urgent.calls.find(([, text]) => text === "\u25F7")?.[0], "warning");
+	assert.equal(urgent.calls.find(([token]) => token === "accent"), undefined);
+	assert.deepEqual(urgent.calls.find(([, text]) => text.startsWith("\u2192 ")), ["warning", "\u2192 15m"]);
+});
+
+test("footer paints the second-to-last step at 1m and eats the rest at 0m", async () => {
+	const { calls, theme } = captureTheme();
+	const { statusText } = await import("../src/view.ts");
+
+	// 1m: the P is still dim like the rest of the tail that has not gone yet.
+	withFrozenClock("2026-11-02T00:59:00Z", () => statusText(theme, FOOTER_CONFIG, "en", FOOTER_PRICING));
+	assert.deepEqual(calls.find(([, text]) => text === "OFF-P"), ["dim", "OFF-P"]);
+	assert.deepEqual(calls.find(([, text]) => text === "EAK"), ["error", "EAK"]);
+
+	// 0m, the final seconds: the whole four-letter tail is red, nothing yellow in the word.
+	const last = captureTheme();
+	withFrozenClock("2026-11-02T00:59:40Z", () => statusText(last.theme, FOOTER_CONFIG, "en", FOOTER_PRICING));
+	assert.deepEqual(last.calls.find(([, text]) => text === "OFF-"), ["dim", "OFF-"]);
+	assert.deepEqual(last.calls.find(([, text]) => text === "PEAK"), ["error", "PEAK"]);
+	// The clock and the countdown keep the yellow warning.
+	assert.equal(last.calls.find(([, text]) => text === "\u25F7")?.[0], "warning");
+	assert.deepEqual(last.calls.find(([, text]) => text.startsWith("\u2192 ")), ["warning", "\u2192 0m"]);
+});
+
+test("footer eats PEAK before off-peak in green, the colour it is heading to", async () => {
+	const { calls, theme } = captureTheme();
+	const { statusText } = await import("../src/view.ts");
+	// Peak window ends at 04:00 UTC.
+	withFrozenClock("2026-11-02T03:58:00Z", () => statusText(theme, FOOTER_CONFIG, "en", FOOTER_PRICING));
+
+	assert.deepEqual(calls.find(([, text]) => text === "OFF-PEAK"), undefined);
+	assert.deepEqual(calls.find(([, text]) => text === "P"), ["dim", "P"]);
+	assert.deepEqual(calls.find(([, text]) => text === "EAK"), ["success", "EAK"]);
+
+	// ...and the same dim head at 1m, with the tail in the incoming green.
+	const brink = captureTheme();
+	withFrozenClock("2026-11-02T03:59:20Z", () => statusText(brink.theme, FOOTER_CONFIG, "en", FOOTER_PRICING));
+	assert.deepEqual(brink.calls.find(([, text]) => text === "OFF-PEAK"), undefined);
+	assert.deepEqual(brink.calls.find(([, text]) => text === "P",), ["dim", "P"]);
+	assert.deepEqual(brink.calls.find(([, text]) => text === "EAK"), ["success", "EAK"]);
+});

@@ -7,6 +7,26 @@ always point at the commit whose `package.json` declares the same version.
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-11-02
+
+### Added
+
+- Footer escalation as the next switch approaches. Below 15 minutes to the switch the
+  clock and the countdown turn yellow (`warning`), so the change of tariff is announced
+  before it happens.
+- The tariff word is eaten from the end in the last minutes, one letter per minute shown
+  by the counter: `OFF-PEA`+`K` (4m), `OFF-PE`+`AK` (3m), `OFF-P`+`EAK` (2m and 1m), and
+  `OFF-`+`PEAK` (0m). Consumed letters dim, the rest take the colour of the tariff that
+  is about to start — red towards PEAK, green towards OFF-PEAK, in both directions.
+- `countdownPhase()` in `src/rules.ts`: pure decision for the urgent flag and the eaten
+  letters, keyed to the displayed countdown so colours change when the number changes.
+
+### Changed
+
+- The footer repaints on a self-rescheduling timeout instead of a fixed interval and drops
+  to a 1 s tick in the last five minutes before a switch, so each step lands on the minute.
+  `intervalMs` still sets the cadence for the rest of the time.
+
 ## [0.3.3] - 2026-11-02
 
 ### Changed

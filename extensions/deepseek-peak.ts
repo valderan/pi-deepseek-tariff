@@ -14,15 +14,22 @@ import type { ExtensionAPI, ExtensionCommandContext, ExtensionContext, Theme } f
 import { loadConfig, PRICING_CACHE, saveConfig, type Config } from "../src/config.ts";
 import { STRINGS, type Lang } from "../src/i18n.ts";
 import { createPricingStore, isOffline, type Pricing } from "../src/pricing.ts";
+import { nextTransition } from "../src/rules.ts";
 import { SEPARATOR, panelLines, statusText } from "../src/view.ts";
 
 const STATUS_KEY = "deepseek-peak";
 const WIDGET_KEY = "deepseek-peak";
 
+/** Tick used while the footer counts down the last minutes before a switch. */
+const FAST_TICK_MS = 1_000;
+
+/** The footer changes every minute below this gap, so it needs the fast tick. */
+const FAST_WINDOW_MS = 5 * 60_000;
+
 export default function deepseekPeak(pi: ExtensionAPI) {
 	let config = loadConfig();
 	let lang: Lang = config.language ?? "en";
-	let timer: ReturnType<typeof setInterval> | undefined;
+	let timer: ReturnType<typeof setTimeout> | undefined;
 	let panelVisible = false;
 
 	const pricing = createPricingStore({
@@ -80,21 +87,36 @@ export default function deepseekPeak(pi: ExtensionAPI) {
 	};
 
 	const stop = () => {
-		if (timer !== undefined) clearInterval(timer);
+		if (timer !== undefined) clearTimeout(timer);
 		timer = undefined;
+	};
+
+	/**
+	 * Normally the footer only needs `intervalMs`, but in the last five minutes the
+	 * countdown word changes every minute, so poll faster to land on the boundary.
+	 */
+	const nextDelay = () => {
+		const msLeft = nextTransition(new Date(), config.holidays).getTime() - Date.now();
+		return msLeft < FAST_WINDOW_MS ? Math.min(FAST_TICK_MS, config.intervalMs) : config.intervalMs;
 	};
 
 	const start = (ctx: ExtensionContext) => {
 		stop();
 		render(ctx);
-		timer = setInterval(() => {
-			// Only hits the network when the TTL expired.
-			if (!pricing.expired()) {
-				render(ctx);
-				return;
-			}
-			void pricing.refresh().then((value) => render(ctx, value));
-		}, config.intervalMs);
+
+		// A self-rescheduling timeout instead of an interval: the cadence follows the countdown.
+		const schedule = () => {
+			timer = setTimeout(() => {
+				const paint = (value?: Pricing) => {
+					render(ctx, value);
+					schedule();
+				};
+				// Only hits the network when the TTL expired.
+				if (pricing.expired()) void pricing.refresh().then(paint);
+				else paint();
+			}, nextDelay());
+		};
+		schedule();
 	};
 
 	pi.on("session_start", async (_event, ctx) => {

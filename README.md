@@ -38,7 +38,7 @@ Commands: /dsp on|off|refresh|en|ru · /dsp footer on|off
 pi install npm:pi-deepseek-tariff
 
 # from git: tags mirror the npm versions, so pin whichever you want
-pi install git:github.com/valderan/pi-deepseek-tariff@v0.3.3
+pi install git:github.com/valderan/pi-deepseek-tariff@v0.4.0
 
 # local checkout, for development
 git clone git@github.com:valderan/pi-deepseek-tariff.git
@@ -70,6 +70,16 @@ Type `/dsp ` and press Tab: the arguments above are offered as completions, with
 
   The tariff is spelled `PEAK` / `OFF-PEAK` in English regardless of the panel language; only the countdown units are localized, so Russian reads `◷ deepseek OFF-PEAK → 11ч 59м`.
 
+  The line escalates as the switch approaches — clock and countdown first, then the tariff word itself:
+
+  | Left to the switch | Clock + countdown | Tariff word |
+  |---|---|---|
+  | more than 15 min | state colour / accent | whole word in the state colour |
+  | below 15 min | **yellow** (`warning`) | unchanged |
+  | counter shows `4m` / `3m` / `2m` / `1m` / `0m` | yellow | last **1 / 2 / 3 / 3 / 4** letters take the incoming colour, the rest dims |
+
+  So the word is eaten from the end, one letter per minute of the visible countdown: `OFF-PEA` + `K`, then `OFF-PE` + `AK`, … up to `OFF-` + `PEAK` in the final seconds. The tail is **red** when PEAK is about to start and **green** when off-peak is about to start, and the tick drops to 1 s during the last five minutes so each step lands on the minute.
+
   Pi renders every extension status on a single footer line, joined alphabetically, so the segment is kept short.
 - **Peak rules** — DeepSeek defines peak as `01:00-04:00` and `06:00-10:00` **UTC, Monday to Friday**; weekends and Chinese public holidays are off-peak all day.
 - **Local time everywhere** — the UTC clock comes from the machine clock, so peak windows, weekday labels and countdowns are rendered in *your* zone (`(MSK)`, `(UTC-04:00)`, …). Weekday labels shift with the zone: at UTC−4 the windows land on Sun–Thu.
@@ -96,7 +106,7 @@ Type `/dsp ` and press Tab: the arguments above are offered as completions, with
 | Key | Default | Meaning |
 |---|---|---|
 | `language` | pi's `settings.json` language, else `en` | `"en"` or `"ru"` |
-| `intervalMs` | `30000` | minimum refresh cadence (clamped to ≥ 5000) |
+| `intervalMs` | `30000` | repaint cadence (clamped to ≥ 5000); the footer switches to a 1 s tick by itself in the last five minutes before a switch |
 | `pricingTtlHours` | `6` | how long parsed prices stay valid |
 | `alwaysShow` | `false` | show the footer line for non-DeepSeek models too |
 | `footer` | `true` | show the footer status line at all; `/dsp footer off` writes this |
@@ -136,11 +146,11 @@ the commit whose `package.json` says `X.Y.Z`, and npm publishes that same versio
 
 ```bash
 # 1. bump package.json, add a CHANGELOG entry, commit
-npm version 0.3.3 --no-git-tag-version     # or edit by hand
-git commit -am "chore: release 0.3.3"
+npm version 0.4.0 --no-git-tag-version     # or edit by hand
+git commit -am "chore: release 0.4.0"
 
 # 2. tag the release commit and push
-git tag -a v0.3.3 -m v0.3.3
+git tag -a v0.4.0 -m v0.4.0
 git push origin main --tags
 
 # 3. publish the tag to npm (2FA prompt, or --otp=123456)
@@ -151,7 +161,7 @@ npm publish --access public
 Check the result:
 
 ```bash
-npm view pi-deepseek-tariff dist-tags    # { latest: '0.3.3' }
+npm view pi-deepseek-tariff dist-tags    # { latest: '0.4.0' }
 npm view pi-deepseek-tariff versions
 ```
 
@@ -159,7 +169,7 @@ npm view pi-deepseek-tariff versions
 `NPM_TOKEN` secret is configured; with trusted publishing enabled on npmjs.com the
 token is not needed at all and the build is signed with provenance.
 
-Tags are pinnable with `pi install git:…@v0.3.3`. Published versions show up in the
+Tags are pinnable with `pi install git:…@v0.4.0`. Published versions show up in the
 [pi package gallery](https://pi.dev/packages) through the `pi-package` keyword.
 
 ## Changelog

@@ -111,14 +111,56 @@ export function clockTime(date: Date, lang: Lang): string {
 	return date.toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" });
 }
 
+export function countdownMinutes(ms: number): number {
+	return Math.max(0, Math.round(ms / 60_000));
+}
+
 export function humanize(ms: number, lang: Lang = "en"): string {
-	const minutes = Math.max(0, Math.round(ms / 60_000));
+	const minutes = countdownMinutes(ms);
 	const hourUnit = lang === "ru" ? "ч" : "h";
 	const minuteUnit = lang === "ru" ? "м" : "m";
 	if (minutes < 60) return `${minutes}${minuteUnit}`;
 	const hours = Math.floor(minutes / 60);
 	const rest = minutes % 60;
 	return rest === 0 ? `${hours}${hourUnit}` : `${hours}${hourUnit} ${rest}${minuteUnit}`;
+}
+
+export type CountdownPhase = {
+	/** Minutes the counter shows, so the animation can follow the visible number. */
+	minutes: number;
+	/** Less than 15 minutes to the switch: the clock and the countdown turn yellow. */
+	urgent: boolean;
+	/** Trailing letters of the tariff word painted in the incoming colour (0..4). */
+	swallowed: number;
+};
+
+/** Yellow warning starts below this gap to the next switch. */
+export const URGENT_MS = 15 * 60_000;
+
+/** A four-letter tail is all the animation ever covers, so `PEAK` is eaten whole. */
+export const MAX_SWALLOWED = 4;
+
+/**
+ * Letters of the four-letter tail already painted in the incoming colour, keyed by
+ * the minute the counter shows. `1` repeats the `2` step, and the whole tail goes
+ * only when the counter drops to `0` in the last seconds.
+ */
+const SWALLOWED_BY_MINUTES: Readonly<Record<number, number>> = { 0: 4, 1: 3, 2: 3, 3: 2, 4: 1 };
+
+/**
+ * How close the next switch is, expressed as what the footer should paint.
+ *
+ * The step follows the *displayed* countdown (`4м` → one letter, `3м` → two, …),
+ * so the colours change exactly when the number changes instead of up to a
+ * minute earlier.
+ */
+export function countdownPhase(msLeft: number): CountdownPhase {
+	const minutes = countdownMinutes(msLeft);
+	return {
+		minutes,
+		urgent: msLeft < URGENT_MS,
+		swallowed: minutes >= 5 ? 0 : (SWALLOWED_BY_MINUTES[minutes] ?? 0),
+	};
 }
 
 /** Local wall-clock time of a UTC hour on the machine's current date. */

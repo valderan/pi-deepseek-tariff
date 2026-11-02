@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { beijingDateKey, isPeak, nextTransition } from "../src/rules.ts";
+import { beijingDateKey, countdownMinutes, countdownPhase, isPeak, MAX_SWALLOWED, nextTransition } from "../src/rules.ts";
 
 const NO_HOLIDAYS = new Set<string>();
 
@@ -53,4 +53,33 @@ test("nextTransition: holidays push the switch to the next weekday", () => {
 	const holidays = new Set(["2026-10-26", "2026-10-27"]);
 	const next = nextTransition(new Date("2026-10-26T02:00:00Z"), holidays);
 	assert.equal(next.getTime(), Date.parse("2026-10-28T01:00:00Z"));
+});
+
+test("countdownPhase: yellow starts strictly below 15 minutes", () => {
+	assert.equal(countdownPhase(15 * 60_000).urgent, false);
+	assert.equal(countdownPhase(15 * 60_000 - 1).urgent, true);
+	assert.equal(countdownPhase(60_000).urgent, true);
+});
+
+test("countdownPhase eats letters by the displayed minute", () => {
+	const ladder: Array<[number, number]> = [
+		[6, 0],
+		[5, 0],
+		[4, 1],
+		[3, 2],
+		[2, 3],
+		[1, 3],
+		[0, 4],
+	];
+	for (const [minutes, swallowed] of ladder) {
+		assert.equal(countdownPhase(minutes * 60_000).swallowed, swallowed, `${minutes}m must swallow ${swallowed}`);
+	}
+	// The last letter goes only in the final seconds, when the counter shows 0m.
+	assert.equal(countdownPhase(29_000).swallowed, 4);
+	assert.equal(countdownPhase(30_000).swallowed, 3);
+});
+
+test("countdownPhase never swallows more than a four-letter tail", () => {
+	assert.equal(countdownPhase(-5 * 60_000).swallowed, MAX_SWALLOWED);
+	assert.equal(countdownMinutes(-1), 0);
 });
