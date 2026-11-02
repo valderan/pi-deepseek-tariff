@@ -27,6 +27,12 @@ always point at the commit whose `package.json` declares the same version.
   to a 1 s tick in the last five minutes before a switch, so each step lands on the minute.
   `intervalMs` still sets the cadence for the rest of the time.
 
+### Fixed
+
+- `src/view.ts` keeps zero runtime imports: the brand colour is a plain `Color` literal
+  instead of `parseColor()` from `@earendil-works/pi-tui`. The CI `test` job runs
+  `node --test` without `npm install`, so the runtime import broke it.
+
 ## [0.3.3] - 2026-11-02
 
 ### Changed

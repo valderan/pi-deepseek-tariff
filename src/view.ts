@@ -8,7 +8,7 @@
  */
 
 import type { Theme } from "@earendil-works/pi-coding-agent";
-import { parseColor } from "@earendil-works/pi-tui";
+import type { Color } from "@earendil-works/pi-tui";
 import type { Config } from "./config.ts";
 import { localizeUnit, STRINGS, type Lang } from "./i18n.ts";
 import type { Pricing, RequestPricing } from "./pricing.ts";
@@ -34,8 +34,12 @@ export const SEPARATOR = "\u0000rule";
 /** Footer clock: one cell wide, so the segment stays short on the shared status line. */
 const CLOCK = "\u25F7"; // ◷
 
-/** DeepSeek brand blue. Fixed in every theme: it is the product colour, not a theme role. */
-const BRAND_BLUE = parseColor("#4175E6");
+/**
+ * DeepSeek brand blue (#4175E6). Fixed in every theme: it is the product colour, not a
+ * theme role. Written as a plain `Color` literal rather than `parseColor("#4175E6")`, so
+ * this module keeps zero runtime imports — the test job runs without `npm install`.
+ */
+const BRAND_BLUE: Color = { kind: "rgb", r: 0x41, g: 0x75, b: 0xe6 };
 
 /** "Search & Fetch" value: a shared price is printed once. */
 export function requestPricingText(entries: RequestPricing[], lang: Lang): string | undefined {
