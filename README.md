@@ -10,7 +10,7 @@ A [pi](https://pi.dev) extension that shows the current **DeepSeek API tariff wi
 DeepSeek charges double during peak hours, so knowing the current window is worth real money.
 
 ```
-● DeepSeek Off-peak for 11h 59m          ← footer line, always visible
+◷ deepseek OFF-PEAK → 11h 59m          ← footer line, always visible
 
 Now OFF-PEAK
 Computer: 14:43:52 26-10-2026(MSK) | UTC: 2026-10-26 11:43
@@ -38,7 +38,7 @@ Commands: /dsp on|off|refresh|en|ru · /dsp footer on|off
 pi install npm:pi-deepseek-tariff
 
 # from git: tags mirror the npm versions, so pin whichever you want
-pi install git:github.com/valderan/pi-deepseek-tariff@v0.3.0
+pi install git:github.com/valderan/pi-deepseek-tariff@v0.3.3
 
 # local checkout, for development
 git clone git@github.com:valderan/pi-deepseek-tariff.git
@@ -66,14 +66,14 @@ Type `/dsp ` and press Tab: the arguments above are offered as completions, with
 
 ## What it does
 
-- **Footer line** — one compact status line: `● DeepSeek Off-peak for 11h 59m`, or `● DeepSeek Peak for 1h 40m` during peak. The text is always yellow and only the dot changes colour — green for off-peak, red for peak. Shown only while a DeepSeek model is active; `/dsp footer off` hides it for good.
+- **Footer line** — one compact status line: `◷ deepseek OFF-PEAK → 11h 59m`, or `◷ deepseek PEAK → 1h 40m` during peak. The clock glyph leads the line and takes the state colour — green for off-peak, red for peak — and the tariff word next to it is coloured the same way. The brand is written lowercase in DeepSeek blue (`#4175E6`), the countdown uses the theme accent. Shown only while a DeepSeek model is active; `/dsp footer off` hides it for good.
 
-  Russian looks like `● DeepSeek Обычный ещё 11ч 59м` / `● DeepSeek Пиковый ещё 1ч 40м`.
+  The tariff is spelled `PEAK` / `OFF-PEAK` in English regardless of the panel language; only the countdown units are localized, so Russian reads `◷ deepseek OFF-PEAK → 11ч 59м`.
 
   Pi renders every extension status on a single footer line, joined alphabetically, so the segment is kept short.
 - **Peak rules** — DeepSeek defines peak as `01:00-04:00` and `06:00-10:00` **UTC, Monday to Friday**; weekends and Chinese public holidays are off-peak all day.
 - **Local time everywhere** — the UTC clock comes from the machine clock, so peak windows, weekday labels and countdowns are rendered in *your* zone (`(MSK)`, `(UTC-04:00)`, …). Weekday labels shift with the zone: at UTC−4 the windows land on Sun–Thu.
-- **Prices** — parsed from `api-docs.deepseek.com/quick_start/pricing/`: cache hit, cache miss and output per model, plus the Search & Fetch request rates. The tariff in effect is highlighted.
+- **Prices** — parsed from `api-docs.deepseek.com/quick_start/pricing/`: cache hit, cache miss and output per model, plus the Search & Fetch request rates. The tariff in effect is highlighted, and the `DeepSeek` word in the `DeepSeek prices:` label keeps the same brand blue as the footer.
 - **Caching** — the page is parsed at most once per `pricingTtlHours` (default 6), and the result is cached on disk, so restarts stay offline. `PI_OFFLINE` disables network access entirely and the panel falls back to built-in values.
 
 ## Configuration
@@ -136,11 +136,11 @@ the commit whose `package.json` says `X.Y.Z`, and npm publishes that same versio
 
 ```bash
 # 1. bump package.json, add a CHANGELOG entry, commit
-npm version 0.3.2 --no-git-tag-version     # or edit by hand
-git commit -am "chore: release 0.3.2"
+npm version 0.3.3 --no-git-tag-version     # or edit by hand
+git commit -am "chore: release 0.3.3"
 
 # 2. tag the release commit and push
-git tag -a v0.3.2 -m v0.3.2
+git tag -a v0.3.3 -m v0.3.3
 git push origin main --tags
 
 # 3. publish the tag to npm (2FA prompt, or --otp=123456)
@@ -151,7 +151,7 @@ npm publish --access public
 Check the result:
 
 ```bash
-npm view pi-deepseek-tariff dist-tags    # { latest: '0.3.2' }
+npm view pi-deepseek-tariff dist-tags    # { latest: '0.3.3' }
 npm view pi-deepseek-tariff versions
 ```
 
@@ -159,7 +159,7 @@ npm view pi-deepseek-tariff versions
 `NPM_TOKEN` secret is configured; with trusted publishing enabled on npmjs.com the
 token is not needed at all and the build is signed with provenance.
 
-Tags are pinnable with `pi install git:…@v0.3.2`. Published versions show up in the
+Tags are pinnable with `pi install git:…@v0.3.3`. Published versions show up in the
 [pi package gallery](https://pi.dev/packages) through the `pi-package` keyword.
 
 ## Changelog

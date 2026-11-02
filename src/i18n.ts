@@ -23,6 +23,8 @@ type Strings = {
 	nextIn: (duration: string) => string;
 	and: string;
 	prices: string;
+	/** The product name inside `prices`, rendered in the DeepSeek blue instead of the label token. */
+	pricesBrand: string;
 	pricesState: (state: string) => string;
 	activeModel: string;
 	peakWindows: (zone: string) => string;
@@ -34,6 +36,7 @@ type Strings = {
 	sourceBuiltin: string;
 	requestPricing: string;
 	commands: string;
+	/** Footer line — the state is always written in English (PEAK / OFF-PEAK), in every language. */
 	statusBrand: string;
 	statusPeak: string;
 	statusOffPeak: string;
@@ -53,6 +56,7 @@ export const STRINGS: Record<Lang, Strings> = {
 		nextIn: (duration) => `in ${duration}`,
 		and: "and",
 		prices: "DeepSeek prices:",
+		pricesBrand: "DeepSeek",
 		pricesState: (state) => `$ per 1M tokens, active: ${state}`,
 		activeModel: "← active",
 		peakWindows: (zone) => `Peak windows (${zone}):`,
@@ -64,10 +68,10 @@ export const STRINGS: Record<Lang, Strings> = {
 		sourceBuiltin: "built-in values (page unavailable)",
 		requestPricing: "Search & Fetch:",
 		commands: "Commands:",
-		statusBrand: "DeepSeek",
-		statusPeak: "Peak",
-		statusOffPeak: "Off-peak",
-		statusFor: (duration) => `for ${duration}`,
+		statusBrand: "deepseek",
+		statusPeak: "PEAK",
+		statusOffPeak: "OFF-PEAK",
+		statusFor: (duration) => `\u2192 ${duration}`,
 		locale: "en-GB",
 		hourUnit: "h",
 		minuteUnit: "m",
@@ -81,6 +85,7 @@ export const STRINGS: Record<Lang, Strings> = {
 		nextIn: (duration) => `через ${duration}`,
 		and: "и",
 		prices: "Цены DeepSeek:",
+		pricesBrand: "DeepSeek",
 		pricesState: (state) => `$ за 1M токенов, активен ${state}`,
 		activeModel: "← активна",
 		peakWindows: (zone) => `Окна peak (${zone}):`,
@@ -92,10 +97,10 @@ export const STRINGS: Record<Lang, Strings> = {
 		sourceBuiltin: "встроенные значения (страница недоступна)",
 		requestPricing: "Search & Fetch:",
 		commands: "Команды:",
-		statusBrand: "DeepSeek",
-		statusPeak: "Пиковый",
-		statusOffPeak: "Обычный",
-		statusFor: (duration) => `ещё ${duration}`,
+		statusBrand: "deepseek",
+		statusPeak: "PEAK",
+		statusOffPeak: "OFF-PEAK",
+		statusFor: (duration) => `\u2192 ${duration}`,
 		locale: "ru-RU",
 		hourUnit: "ч",
 		minuteUnit: "м",

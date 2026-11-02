@@ -1,11 +1,14 @@
 /**
  * Presentation: the footer status line and the panel body.
  *
- * Colors follow the pi theme: labels in the warning token, values in the text
- * token, active rows bold, inactive rows dim.
+ * Colors follow the pi theme: the footer clock and the tariff word share the
+ * state token (green off-peak, red peak), the countdown uses the accent token,
+ * and only the brand keeps a fixed colour. The panel below the editor keeps the
+ * warning/text pairing.
  */
 
 import type { Theme } from "@earendil-works/pi-coding-agent";
+import { parseColor } from "@earendil-works/pi-tui";
 import type { Config } from "./config.ts";
 import { localizeUnit, STRINGS, type Lang } from "./i18n.ts";
 import type { Pricing, RequestPricing } from "./pricing.ts";
@@ -25,6 +28,12 @@ import {
 
 /** Placeholder for a full-width rule; the renderer expands it to the panel width. */
 export const SEPARATOR = "\u0000rule";
+
+/** Footer clock: one cell wide, so the segment stays short on the shared status line. */
+const CLOCK = "\u25F7"; // ◷
+
+/** DeepSeek brand blue. Fixed in every theme: it is the product colour, not a theme role. */
+const BRAND_BLUE = parseColor("#4175E6");
 
 /** "Search & Fetch" value: a shared price is printed once. */
 export function requestPricingText(entries: RequestPricing[], lang: Lang): string | undefined {
@@ -54,9 +63,12 @@ export function requestPricingText(entries: RequestPricing[], lang: Lang): strin
 }
 
 /**
- * Compact footer line: a coloured dot plus always-yellow text, for example
- * "● DeepSeek Off-peak for 11h 59m" or "● DeepSeek Peak for 1h 40m".
- * Only the dot changes colour, so the line reads calmly in both states.
+ * Compact footer line: a state-coloured clock, the brand name in DeepSeek blue,
+ * the tariff in English and the countdown in the theme accent — for example
+ * "◷ deepseek OFF-PEAK → 11h 59m" or "◷ deepseek PEAK → 1h 40m".
+ *
+ * The clock carries the state colour, so the line stays legible without a
+ * separate status dot; the duration keeps the panel language units.
  */
 export function statusText(theme: Theme, config: Config, lang: Lang, pricing: Pricing): string {
 	void pricing;
@@ -64,10 +76,25 @@ export function statusText(theme: Theme, config: Config, lang: Lang, pricing: Pr
 	const now = new Date();
 	const peak = isPeak(now, config.holidays);
 	const next = nextTransition(now, config.holidays);
-	const dot = theme.fg(peak ? "error" : "success", "●");
-	const label = peak ? text.statusPeak : text.statusOffPeak;
+	const state = peak ? "error" : "success";
 	const duration = humanize(next.getTime() - now.getTime(), lang);
-	return `${dot} ${theme.fg("warning", `${text.statusBrand} ${label} ${text.statusFor(duration)}`)}`;
+	const clock = theme.fg(state, CLOCK);
+	const brand = theme.style(text.statusBrand, { fg: BRAND_BLUE });
+	const label = theme.fg(state, peak ? text.statusPeak : text.statusOffPeak);
+	return `${clock} ${brand} ${label} ${theme.fg("accent", text.statusFor(duration))}`;
+}
+
+/**
+ * Colour the product name inside a panel label without splitting the string in
+ * i18n: the label stays one translatable line, only the brand word is swapped to
+ * the DeepSeek blue. Falls back to `rest(label)` when the name is missing.
+ */
+function brandLabel(theme: Theme, label: string, brand: string, rest: (value: string) => string): string {
+	const at = label.indexOf(brand);
+	if (at < 0) return rest(label);
+	const head = rest(label.slice(0, at));
+	const tail = rest(label.slice(at + brand.length));
+	return `${head}${theme.style(brand, { fg: BRAND_BLUE })}${tail}`;
 }
 
 export function panelLines(
@@ -111,7 +138,7 @@ export function panelLines(
 	);
 
 	// 4. Model prices with the active tariff highlighted.
-	lines.push(`${yellow(text.prices)} ${white(text.pricesState(state))}`);
+	lines.push(`${brandLabel(theme, text.prices, text.pricesBrand, yellow)} ${white(text.pricesState(state))}`);
 	const value = (amount: number) => amount.toFixed(4).padStart(8);
 	for (const [name, model] of Object.entries(pricing.models)) {
 		const id = `${config.providerPrefix}${name}`;

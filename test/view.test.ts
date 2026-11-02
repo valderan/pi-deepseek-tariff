@@ -64,31 +64,64 @@ test("requestPricingText returns undefined for no entries", () => {
 	assert.equal(requestPricingText([], "en"), undefined);
 });
 
+const PANEL_CONFIG = {
+	intervalMs: 30_000,
+	pricingTtlHours: 6,
+	alwaysShow: false,
+	footer: true,
+	models: ["deepseek"],
+	providerPrefix: "deepseek:",
+	holidays: new Set<string>(),
+};
+const PANEL_PRICING = {
+	models: { "deepseek-flash": { peak: { cacheHit: 0, cacheMiss: 0, output: 0 }, offPeak: { cacheHit: 0, cacheMiss: 0, output: 0 } } },
+	requests: [],
+	fetchedAt: 0,
+	source: "builtin" as const,
+};
+
 test("panel advertises the short /dsp command form", () => {
-	const theme = { fg: (_token: string, text: string) => text, bold: (text: string) => text } as never;
+	const theme = { fg: (_token: string, text: string) => text, style: (text: string) => text, bold: (text: string) => text } as never;
 	const lines = panelLines(theme, {
-		config: {
-			intervalMs: 30_000,
-			pricingTtlHours: 6,
-			alwaysShow: false,
-			footer: true,
-			models: ["deepseek"],
-			providerPrefix: "deepseek:",
-			holidays: new Set<string>(),
-		},
+		config: PANEL_CONFIG,
 		lang: "en",
 		currentModel: "deepseek:deepseek-flash",
-		pricing: {
-			models: { "deepseek-flash": { peak: { cacheHit: 0, cacheMiss: 0, output: 0 }, offPeak: { cacheHit: 0, cacheMiss: 0, output: 0 } } },
-			requests: [],
-			fetchedAt: 0,
-			source: "builtin",
-		},
+		pricing: PANEL_PRICING,
 		ttlMs: 6 * 3_600_000,
 	});
 	const hint = lines.at(-1) ?? "";
 	assert.match(hint, /\/dsp on\|off\|refresh\|en\|ru/);
 	assert.doesNotMatch(hint, /\/deepseek-peak on/);
+});
+
+test("price label paints only the product name in the brand colour", () => {
+	const styled: string[] = [];
+	const theme = {
+		fg: (token: string, text: string) => {
+			styled.push(`${token}:${text}`);
+			return text;
+		},
+		style: (text: string) => {
+			styled.push(`brand:${text}`);
+			return text;
+		},
+		bold: (text: string) => text,
+	} as never;
+	const options = { config: PANEL_CONFIG, currentModel: undefined, pricing: PANEL_PRICING, ttlMs: 6 * 3_600_000 };
+
+	for (const [lang, expected] of [
+		["en", "DeepSeek prices:"],
+		["ru", "Цены DeepSeek:"],
+	] as const) {
+		styled.length = 0;
+		const line = panelLines(theme, { ...options, lang }).find((item) => item.includes("$ per 1M tokens") || item.includes("$ за 1M токенов"));
+		assert.ok(line, `the price label must be rendered for ${lang}`);
+		assert.ok(line.startsWith(expected), `unexpected label: ${line}`);
+		assert.ok(styled.includes("brand:DeepSeek"), "the product name must be painted with the brand colour");
+		assert.ok(!styled.includes(`warning:${expected}`), "the whole label must not stay in the warning token");
+		// The colon keeps the label token, so the line still reads as one label.
+		assert.ok(styled.some((entry) => entry.startsWith("warning:") && entry.includes(":")));
+	}
 });
 
 /**
@@ -137,13 +170,14 @@ test("weekday labels shift with the zone", () => {
 	});
 });
 
-test("footer status uses a coloured dot and always-yellow text", async () => {
+test("footer status leads with a state-coloured clock and the lowercase brand", async () => {
 	const calls: Array<[string, string]> = [];
 	const theme = {
 		fg: (token: string, text: string) => {
 			calls.push([token, text]);
 			return `<${token}>${text}`;
 		},
+		style: (text: string) => `<brand>${text}</brand>`,
 		bold: (text: string) => text,
 	} as never;
 	const { statusText } = await import("../src/view.ts");
@@ -158,11 +192,23 @@ test("footer status uses a coloured dot and always-yellow text", async () => {
 	};
 	const line = statusText(theme, config, "ru", { models: {}, requests: [], fetchedAt: 0, source: "builtin" });
 
-	// Only the dot is coloured by state; the text always uses the warning token.
-	const dot = calls.find(([, text]) => text === "●");
-	assert.ok(dot, "the dot must be rendered");
-	assert.ok(dot[0] === "success" || dot[0] === "error", `unexpected dot token ${dot[0]}`);
-	const body = calls.find(([token]) => token === "warning");
-	assert.ok(body, "the text must use the warning token");
-	assert.match(body[1], /^DeepSeek (Обычный|Пиковый) ещё \d/);
+	// The clock replaced the dot and carries the state colour.
+	const clock = calls.find(([, text]) => text === "\u25F7");
+	assert.ok(clock, "the clock glyph must lead the line");
+	assert.ok(clock[0] === "success" || clock[0] === "error", `unexpected clock token ${clock[0]}`);
+
+	// The tariff is English in every language and matches the clock colour.
+	const label = calls.find(([, text]) => text === "PEAK" || text === "OFF-PEAK");
+	assert.ok(label, "the tariff must be written as PEAK / OFF-PEAK");
+	assert.equal(label[0], clock[0], "clock and tariff must share the state colour");
+
+	// The brand is lowercase and keeps the DeepSeek blue instead of a theme token.
+	assert.match(line, /<brand>deepseek<\/brand>/);
+
+	// "for" / "ещё" is replaced by an arrow, and the duration stays localized.
+	const rest = calls.find(([token]) => token === "accent");
+	assert.ok(rest, "the countdown must use the accent token");
+	assert.match(rest[1], /^\u2192 \d+[\u0447\u043c] /);
+	assert.doesNotMatch(line, /ещё|for /);
+	assert.doesNotMatch(line, /warning/);
 });

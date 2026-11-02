@@ -7,6 +7,24 @@ always point at the commit whose `package.json` declares the same version.
 
 ## [Unreleased]
 
+## [0.3.3] - 2026-11-02
+
+### Changed
+
+- Footer line redesigned: the status dot is replaced by a clock glyph `◷`, and the
+  brand is now lowercase `deepseek` in DeepSeek blue (`#4175E6`). The clock and the
+  tariff word share the state colour (green `success` off-peak, red `error` peak),
+  the countdown uses the theme accent, and the rest of the line follows the theme
+  instead of the always-yellow `warning` token.
+- Footer text: `for` / `ещё` is replaced by an arrow, so the line reads
+  `◷ deepseek OFF-PEAK → 11h 59m` / `◷ deepseek OFF-PEAK → 11ч 59м`.
+- `PEAK` / `OFF-PEAK` is written in English in both languages; the localized
+  `Пиковый` / `Обычный` labels are gone. The countdown units stay localized, and the
+  panel body is unchanged.
+- Panel: the `DeepSeek` word in the `DeepSeek prices:` label (and `Цены DeepSeek:`)
+  is painted in the same DeepSeek blue (`#4175E6`) as the footer brand; the rest of
+  the label keeps the warning token.
+
 ## [0.3.2] - 2026-10-30
 
 ### Added
